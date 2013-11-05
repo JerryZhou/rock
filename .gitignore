@@ -12,4 +12,12 @@ Thumbs.db
 # qmake generated files #
 ######################
 .qmake.cache
+Info.plist
+Makefile
+qtmac.xcodeproj/
 
+# xcode generated files #
+######################
+Debug/
+rock.build/
+rock.xcodeproj/

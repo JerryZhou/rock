@@ -4,7 +4,7 @@
 cache()
 
 TEMPLATE = app
-TARGET = qtmac
+TARGET = rock 
 INCLUDEPATH += .
 INCLUDEPATH += ./source
 
@@ -26,3 +26,7 @@ SOURCES += $$files(source/net/*.cc)
 HEADERS += $$files(source/util/*.h)
 SOURCES += $$files(source/util/*.cpp)
 SOURCES += $$files(source/util/*.cc)
+
+HEADERS += $$files(source/test/*.h)
+SOURCES += $$files(source/test/*.cpp)
+SOURCES += $$files(source/test/*.cc)
