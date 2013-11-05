@@ -11,7 +11,7 @@ class TestRefBase : public RefBase{
 
 TINYTEST_SUIT(RefBase);
 
-TINTYTEST_CASE(RefBase, constructor)
+TINYTEST_CASE(RefBase, constructor)
 {
     TestRefBase *p = new TestRefBase();
     sp<TestRefBase> ref = p;
@@ -20,7 +20,7 @@ TINTYTEST_CASE(RefBase, constructor)
     TEST_END();
 }
 
-TINTYTEST_CASE(RefBase, assign)
+TINYTEST_CASE(RefBase, assign)
 {
     TestRefBase *p = new TestRefBase();
     sp<TestRefBase> ref = p;
@@ -30,7 +30,7 @@ TINTYTEST_CASE(RefBase, assign)
     TEST_END();
 }
 
-TINTYTEST_CASE(RefBase, clear)
+TINYTEST_CASE(RefBase, clear)
 {
     TestRefBase *p = new TestRefBase();
     sp<TestRefBase> ref = p;
@@ -42,7 +42,7 @@ TINTYTEST_CASE(RefBase, clear)
     TEST_END();
 }
 
-TINTYTEST_CASE(RefBase, destructor)
+TINYTEST_CASE(RefBase, destructor)
 {
     TestRefBase *p = new TestRefBase();
     sp<TestRefBase> ref = p;

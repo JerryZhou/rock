@@ -22,6 +22,18 @@
     Tests are meant to be in the same place as the tested code.
     Declare TINYTEST_NOTEST if you don't want to compile the test code.
     Usually you will declare TINYTEST_NOTEST together with NDEBUG.
+ 
+    Copyright Jerryzhou@outlook.com
+    add macro example:
+ 
+    TINYTEST_SUIT(suit);
+    TINYTEST_CASE(suit, case)
+    {
+        TINYTEST_EQUAL(1, 1);
+        TINYTEST_EQUAL(2, 1);
+    }
+ 
+    runAllTest();
  */
 
 #ifndef __TINYTEST_H__
@@ -232,7 +244,7 @@ static const bool suiteName##_register = addTestSuite(TinySuit_##suiteName())
 #define TINYTEST_CASE_ADD(suiteName, testCase)                                  \
     static const bool suiteName##_##testCase##_register = addTestSuiteCase(TinySuit_##suiteName(), TinySuitCase_##suiteName##_##testCase, #testCase)
 
-#define TINTYTEST_CASE(suiteName, testCase)                                     \
+#define TINYTEST_CASE(suiteName, testCase)                                     \
 TINYTEST_CASE_DECLARE(suiteName, testCase);                                               \
 TINYTEST_CASE_ADD(suiteName, testCase);                                         \
 TINYTEST_CASE_DECLARE(suiteName, testCase)
