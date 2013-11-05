@@ -1,7 +1,7 @@
 #include "refbase.h"
 
 // log all reference counting operations
-#define PRINT_REFS                     1
+#define PRINT_REFS                     0
 
 #define INITIAL_STRONG_VALUE (1<<28)
 
