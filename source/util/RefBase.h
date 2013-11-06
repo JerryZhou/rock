@@ -6,8 +6,8 @@
 #include <assert.h>
 
 // ---------------------------------------------------------------------------
-typedef int32_t ref_count_t;
-typedef int32_t ref_flag_t;
+typedef int ref_count_t;
+typedef int ref_flag_t;
 
 // ---------------------------------------------------------------------------
 template<typename T> class wp;
