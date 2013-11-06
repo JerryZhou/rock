@@ -3,6 +3,7 @@
 
 #include "test/tinytest.h"
 #include "test/test_refbase.h"
+#include "test/test_log.h"
 
 void test_main()
 {

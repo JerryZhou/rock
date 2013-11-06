@@ -5,9 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    QMainWindow w;
-    w.show();
+    QCoreApplication a(argc, argv);
     
     // unit test entry
     test_main();
