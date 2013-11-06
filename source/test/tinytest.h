@@ -136,7 +136,35 @@ static void runTestRegistry(TinyTestRegistry* registry)
         TEST_LOG_DEBUG("Result: \n\tOK: %d\n", okTests);
     }
 }
+static TinyTestRegistry* globalRegistry()
+{
+    static TinyTestRegistry registry;
+    return &registry;
+}
 
+static bool addTestSuite(TinyTestSuite *suite)
+{
+    suite->m_next = globalRegistry()->m_headSuite;
+    globalRegistry()->m_headSuite = suite;
+    return true;
+}
+
+static bool addTestSuiteCase(TinyTestSuite *suite, TinyTestFunc func, const char* name)
+{
+    TinyTest* testDecl = (TinyTest*)malloc(sizeof(TinyTest));
+    testDecl->m_func = func;
+    testDecl->m_name = name;
+    testDecl->m_next = suite->m_headTest;
+    suite->m_headTest = testDecl;
+    return true;
+}
+
+static void runAllTest()
+{
+    TinyTestRegistry* registry = globalRegistry();
+    runTestRegistry(registry);
+    freeTestRegistry(registry);
+}
 
 #ifndef TINYTEST_NOTESTING
 
@@ -236,10 +264,36 @@ void Suite##suiteName(TinyTestRegistry* registry)                       \
   TINYTEST_RUN_SUITE(suiteName);                                        \
   TINYTEST_END_MAIN();
 
+#define TINYTEST_SUIT(suiteName)                                            \
+TinyTestSuite* TinySuit_##suiteName()                                       \
+{                                                                           \
+    static TinyTestSuite* suite = NULL;                                     \
+    if( suite == NULL ) {                                                   \
+    suite = (TinyTestSuite*)malloc(sizeof(TinyTestSuite));                  \
+    suite->m_name = #suiteName;                                             \
+    suite->m_headTest = NULL;                                               \
+    suite->m_next = NULL;                                                   \
+    }                                                                       \
+    return suite;                                                           \
+}                                                                           \
+static const bool suiteName##_register = addTestSuite(TinySuit_##suiteName())
+
+#define TINYTEST_CASE_DECLARE(suiteName, testCase)                              \
+void TinySuitCase_##suiteName##_##testCase(TinyTest* __test)
+
+#define TINYTEST_CASE_ADD(suiteName, testCase)                                  \
+static const bool suiteName##_##testCase##_register = addTestSuiteCase(TinySuit_##suiteName(), TinySuitCase_##suiteName##_##testCase, #testCase)
+
+#define TINYTEST_CASE(suiteName, testCase)                                     \
+TINYTEST_CASE_DECLARE(suiteName, testCase);                                    \
+TINYTEST_CASE_ADD(suiteName, testCase);                                        \
+TINYTEST_CASE_DECLARE(suiteName, testCase)
+
 #else // TINYTEST_NOTESTING
+
 #define TINYTEST_TRUE()
 
-#define TINYTEST_EQUAL_MSG(expected, actual, msg) (void)0 
+#define TINYTEST_EQUAL_MSG(expected, actual, msg) (void)0
 #define TINYTEST_EQUAL(expected, actual) (void)0 
 #define TINYTEST_STR_EQUAL_MSG(expected, actual, msg) (void)0
 #define TINYTEST_STR_EQUAL(expected, actual) (void)0
@@ -256,65 +310,16 @@ void Suite##suiteName(TinyTestRegistry* registry)                       \
 #define TINYTEST_INTERNAL_RUN_TESTS()
 #define TINYTEST_END_MAIN()
 #define TINYTEST_MAIN_SINGLE_SUITE(suiteName)
+
+#define TINYTEST_SUIT(suiteName)
+#define TINYTEST_CASE_DECLARE(suiteName, testCase)
+#define TINYTEST_CASE_ADD(suiteName, testCase)
+#define TINYTEST_CASE(suiteName, testCase)
 #endif // TINYTEST_NOTESTING
 
-static TinyTestRegistry* globalRegistry()
-{
-    static TinyTestRegistry registry;
-    return &registry;
-}
 
-static bool addTestSuite(TinyTestSuite *suite)
-{
-    suite->m_next = globalRegistry()->m_headSuite;
-    globalRegistry()->m_headSuite = suite;
-    return true;
-}
 
-static bool addTestSuiteCase(TinyTestSuite *suite, TinyTestFunc func, const char* name)
-{
-    TinyTest* testDecl = (TinyTest*)malloc(sizeof(TinyTest));
-    testDecl->m_func = func;
-    testDecl->m_name = name;
-    testDecl->m_next = suite->m_headTest;
-    suite->m_headTest = testDecl;
-    return true;
-}
 
-static void runAllTest()
-{
-    TinyTestRegistry* registry = globalRegistry();
-    runTestRegistry(registry);
-    freeTestRegistry(registry);
-}
-    
-#define TEST_OK 1
-#define TEST_END() return TEST_OK
-
-#define TINYTEST_SUIT(suiteName)                                                \
-TinyTestSuite* TinySuit_##suiteName()                                           \
-{                                                                               \
-    static TinyTestSuite* suite = NULL;                                         \
-    if( suite == NULL ) {                                                       \
-        suite = (TinyTestSuite*)malloc(sizeof(TinyTestSuite));                  \
-        suite->m_name = #suiteName;                                             \
-        suite->m_headTest = NULL;                                               \
-        suite->m_next = NULL;                                                   \
-    }                                                                           \
-    return suite;                                                               \
-}                                                                               \
-static const bool suiteName##_register = addTestSuite(TinySuit_##suiteName())
-
-#define TINYTEST_CASE_DECLARE(suiteName, testCase)                              \
-    void TinySuitCase_##suiteName##_##testCase(TinyTest* __test)
-
-#define TINYTEST_CASE_ADD(suiteName, testCase)                                  \
-    static const bool suiteName##_##testCase##_register = addTestSuiteCase(TinySuit_##suiteName(), TinySuitCase_##suiteName##_##testCase, #testCase)
-
-#define TINYTEST_CASE(suiteName, testCase)                                     \
-TINYTEST_CASE_DECLARE(suiteName, testCase);                                    \
-TINYTEST_CASE_ADD(suiteName, testCase);                                        \
-TINYTEST_CASE_DECLARE(suiteName, testCase)
 
 #endif
 
