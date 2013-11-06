@@ -55,13 +55,16 @@
 #define TEST_LOG_DEBUG(...) printf(__VA_ARGS__)
 #endif
 
-typedef int (*TinyTestFunc)(void);
+struct TinyTestStruct;
+
+typedef void (*TinyTestFunc)(TinyTestStruct* test);
 
 typedef struct TinyTestStruct
 {
   TinyTestFunc m_func;
   const char* m_name;
   struct TinyTestStruct* m_next;
+  int m_result;
 } TinyTest;
 
 typedef struct TinyTestSuiteStruct
@@ -109,7 +112,8 @@ static void runTestRegistry(TinyTestRegistry* registry)
         curFailedTests = 0;
         TEST_LOG_INFO("begin suite: %s", s->m_name);
         for ( ; t; t = t->m_next ) {
-            if ( (*t->m_func)() ) {
+            (*t->m_func)(t);
+            if ( t->m_result == 0 ) {
                 TEST_LOG_INFO("%s.%s : ok", s->m_name, t->m_name);
                 ++okTests;
                 ++curOkTests;
@@ -133,7 +137,11 @@ static void runTestRegistry(TinyTestRegistry* registry)
     }
 }
 
+
 #ifndef TINYTEST_NOTESTING
+
+#define TINYTEST_TRUE()     (void)__test
+#define TINYTEST_ERROR()    ++(__test->m_result); return
 
 #define TINYTEST_EQUAL_MSG(expected, actual, msg)                       \
   if ( (expected) != (actual) )                                         \
@@ -141,7 +149,7 @@ static void runTestRegistry(TinyTestRegistry* registry)
     TEST_LOG_ERROR("%s:%d expected %s, actual: %s\n",                   \
            __FILE__, __LINE__, #expected, #actual);                     \
     if ( msg ) TEST_LOG_ERROR(msg);                                     \
-    return 0;                                                           \
+    TINYTEST_ERROR();                                                   \
   }
 
 #define TINYTEST_EQUAL(expected, actual)                                \
@@ -153,7 +161,7 @@ static void runTestRegistry(TinyTestRegistry* registry)
     TEST_LOG_ERROR("%s:%d expected \"%s\", actual: \"%s\"\n",           \
            __FILE__, __LINE__, expected, actual);                       \
     if ( msg ) TEST_LOG_ERROR(msg);                                     \
-    return 0;                                                           \
+    TINYTEST_ERROR();                                                   \
   }
 
 #define TINYTEST_STR_EQUAL(expected, actual)                            \
@@ -165,7 +173,7 @@ static void runTestRegistry(TinyTestRegistry* registry)
     TEST_LOG_ERROR("%s:%d assertion failed: \"%s\"\n",                  \
            __FILE__, __LINE__, #assertion);                             \
     if ( msg ) TEST_LOG_ERROR(msg);                                     \
-    return 0;                                                           \
+    TINYTEST_ERROR();                                                   \
   }
 
 #define TINYTEST_ASSERT(assertion)                                      \
@@ -184,6 +192,7 @@ void Suite##suiteName(TinyTestRegistry* registry)                       \
   
 #define TINYTEST_ADD_TEST(test)                                         \
   TinyTest* test##decl = (TinyTest*)malloc(sizeof(TinyTest));           \
+  test##decl->m_reslt = 0;                                              \
   test##decl->m_func = test;                                            \
   test##decl->m_name = #test;                                           \
   test##decl->m_next = suite->m_headTest;                               \
@@ -228,6 +237,8 @@ void Suite##suiteName(TinyTestRegistry* registry)                       \
   TINYTEST_END_MAIN();
 
 #else // TINYTEST_NOTESTING
+#define TINYTEST_TRUE()
+
 #define TINYTEST_EQUAL_MSG(expected, actual, msg) (void)0 
 #define TINYTEST_EQUAL(expected, actual) (void)0 
 #define TINYTEST_STR_EQUAL_MSG(expected, actual, msg) (void)0
@@ -295,7 +306,7 @@ TinyTestSuite* TinySuit_##suiteName()                                           
 static const bool suiteName##_register = addTestSuite(TinySuit_##suiteName())
 
 #define TINYTEST_CASE_DECLARE(suiteName, testCase)                              \
-    int TinySuitCase_##suiteName##_##testCase()
+    void TinySuitCase_##suiteName##_##testCase(TinyTest* __test)
 
 #define TINYTEST_CASE_ADD(suiteName, testCase)                                  \
     static const bool suiteName##_##testCase##_register = addTestSuiteCase(TinySuit_##suiteName(), TinySuitCase_##suiteName##_##testCase, #testCase)
