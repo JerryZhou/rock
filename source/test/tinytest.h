@@ -127,9 +127,9 @@ static void runTestRegistry(TinyTestRegistry* registry)
         }
     }
     if ( failedTests ) {
-        TEST_LOG_DEBUG("\nResult: \n\tOK: %d, FAILED: %d\n", okTests, failedTests);
+        TEST_LOG_DEBUG("Result: \n\tOK: %d, FAILED: %d\n", okTests, failedTests);
     }else{
-        TEST_LOG_DEBUG("\nResult: \n\tOK: %d\n", okTests);
+        TEST_LOG_DEBUG("Result: \n\tOK: %d\n", okTests);
     }
 }
 

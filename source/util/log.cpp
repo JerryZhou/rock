@@ -1,5 +1,7 @@
 #include "log.h"
 
+#define LOG_ENABLE_COLOR (1)
+
 #include <time.h>
 #ifdef WIN32
 #   include <windows.h>
@@ -7,42 +9,54 @@
 #   include <sys/time.h>
 #endif
 #ifdef WIN32
-static int gettimeofday(struct timeval *tp, void *tzp)
+int gettimeofday( struct timeval *tv, struct timezone *tz )
 {
-    time_t clock;
-    struct tm tm;
-    SYSTEMTIME wtm;
-    GetLocalTime(&wtm);
-    tm.tm_year     = wtm.wYear - 1900;
-    tm.tm_mon     = wtm.wMonth - 1;
-    tm.tm_mday     = wtm.wDay;
-    tm.tm_hour     = wtm.wHour;
-    tm.tm_min     = wtm.wMinute;
-    tm.tm_sec     = wtm.wSecond;
-    tm. tm_isdst    = -1;
-    clock = mktime(&tm);
-    tp->tv_sec = clock;
-    tp->tv_usec = wtm.wMilliseconds * 1000;
-    return (0);
+    time_t rawtime;
+    
+    time(&rawtime);
+    tv->tv_sec = (long)rawtime;
+    
+    // here starts the microsecond resolution:
+    
+    LARGE_INTEGER tickPerSecond;
+    LARGE_INTEGER tick; // a point in time
+    
+    // get the high resolution counter's accuracy
+    QueryPerformanceFrequency(&tickPerSecond);
+    
+    // what time is it ?
+    QueryPerformanceCounter(&tick);
+    
+    // and here we get the current microsecond! \o/
+    tv->tv_usec = (tick.QuadPart % tickPerSecond.QuadPart);
+    
+    return 0;
 }
 #endif
 
-/// colors
-#define __sc_color_red   "\033[0;31m"        /* 0 -> normal ;  31 -> red */
-#define __sc_color_cyan  "\033[1;36m"        /* 1 -> bold ;  36 -> cyan */
-#define __sc_color_green "\033[4;32m"        /* 4 -> underline ;  32 -> green */
-#define __sc_color_blue  "\033[9;34m"        /* 9 -> strike ;  34 -> blue */
-#define __sc_color_black  "\033[0;30m"
-#define __sc_color_brown  "\033[0;33m"
-#define __sc_color_magenta  "\033[0;35m"
-#define __sc_color_gray  "\033[0;37m"
-#define __sc_color_none   "\033[0m"        /* to flush the previous property */
+#if LOG_ENABLE_COLOR
+#include "colorprint.h"
+#define __COLOR_PRINT(color, ...) ColoredPrintf((GTestColor)(color), __VA_ARGS__)
+#else
+#define __COLOR_PRINT(color, ...) printf(__VA_ARGS__)
+#endif
 
-static const char *__sc_colors[] = {
+/// colors
+#define __sc_color_red      1 //"\033[0;31m"        /* 0 -> normal ;  31 -> red */
+#define __sc_color_cyan     6 //"\033[1;36m"        /* 1 -> bold ;  36 -> cyan */
+#define __sc_color_green    2 //"\033[4;32m"        /* 4 -> underline ;  32 -> green */
+#define __sc_color_blue     4 //"\033[9;34m"        /* 9 -> strike ;  34 -> blue */
+#define __sc_color_black    0 //"\033[0;30m"
+#define __sc_color_brown    3 //"\033[0;33m"
+#define __sc_color_magenta  5 //"\033[0;35m"
+#define __sc_color_gray     0 //"\033[0;37m"
+#define __sc_color_none     0 //"\033[0m"        /* to flush the previous property */
+
+static int __sc_colors[] = {
     __sc_color_none, // unknown
     __sc_color_none, // default
     __sc_color_none, // verbose
-    __sc_color_magenta, // debug
+    __sc_color_brown, // debug
     __sc_color_green, // info
     __sc_color_blue, // warn
     __sc_color_red, // error
@@ -56,17 +70,19 @@ static const char *__sc_colors[] = {
  * Send a simple string to the log.
  **/
 int __sc_log_write(int prio, const char *tag, const char *text){
-    struct timeval tv;
     struct tm *tm;
+    struct timeval tv;
     
     gettimeofday(&tv, NULL);
     tm=localtime((time_t*)(&tv.tv_sec));
     if (tag) {
-     return printf("%s%d:%02d:%02d %d \t %s \t %s%s\n", __sc_colors[prio],
-                   tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec, tag, text, __sc_colors[0]);
+        __COLOR_PRINT(__sc_colors[prio], "%d:%02d:%02d %d \t %s \t %s\n",
+                      tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec, tag, text);
+        return 0;
     }else{
-      return printf("%s%d:%02d:%02d %d %s%s\n", __sc_colors[prio],
-                    tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec, text, __sc_colors[0]);
+        __COLOR_PRINT(__sc_colors[prio], "%d:%02d:%02d %d %s\n",
+                      tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec, text);
+        return 0;
     }
 }
 

@@ -5,7 +5,7 @@
 int gstate = 0;
 class TestRefBase : public RefBase{
     virtual ~TestRefBase(){
-        //gstate = 1;
+        gstate = 1;
     }
 };
 
