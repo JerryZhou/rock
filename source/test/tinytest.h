@@ -317,9 +317,5 @@ TINYTEST_CASE_DECLARE(suiteName, testCase)
 #define TINYTEST_CASE(suiteName, testCase)
 #endif // TINYTEST_NOTESTING
 
-
-
-
-
 #endif
 

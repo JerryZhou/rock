@@ -9,26 +9,48 @@
 #   include <sys/time.h>
 #endif
 #ifdef WIN32
-int gettimeofday( struct timeval *tv, struct timezone *tz )
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+#define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#else
+#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#endif
+struct timezone
 {
-    time_t rawtime;
+    int  tz_minuteswest; /* minutes W of Greenwich */
+    int  tz_dsttime;     /* type of dst correction */
+};
+
+int gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+    FILETIME ft;
+    unsigned __int64 tmpres = 0;
+    static int tzflag;
     
-    time(&rawtime);
-    tv->tv_sec = (long)rawtime;
+    if (NULL != tv)
+    {
+        GetSystemTimeAsFileTime(&ft);
+        
+        tmpres |= ft.dwHighDateTime;
+        tmpres <<= 32;
+        tmpres |= ft.dwLowDateTime;
+        
+        /*converting file time to unix epoch*/
+        tmpres -= DELTA_EPOCH_IN_MICROSECS;
+        tmpres /= 10;  /*convert into microseconds*/
+        tv->tv_sec = (long)(tmpres / 1000000UL);
+        tv->tv_usec = (long)(tmpres % 1000000UL);
+    }
     
-    // here starts the microsecond resolution:
-    
-    LARGE_INTEGER tickPerSecond;
-    LARGE_INTEGER tick; // a point in time
-    
-    // get the high resolution counter's accuracy
-    QueryPerformanceFrequency(&tickPerSecond);
-    
-    // what time is it ?
-    QueryPerformanceCounter(&tick);
-    
-    // and here we get the current microsecond! \o/
-    tv->tv_usec = (tick.QuadPart % tickPerSecond.QuadPart);
+    if (NULL != tz)
+    {
+        if (!tzflag)
+        {
+            _tzset();
+            tzflag++;
+        }
+        tz->tz_minuteswest = _timezone / 60;
+        tz->tz_dsttime = _daylight;
+    }
     
     return 0;
 }
@@ -72,9 +94,11 @@ static int __sc_colors[] = {
 int __sc_log_write(int prio, const char *tag, const char *text){
     struct tm *tm;
     struct timeval tv;
+    time_t timep;
     
     gettimeofday(&tv, NULL);
-    tm=localtime((time_t*)(&tv.tv_sec));
+    time(&timep);
+    tm=gmtime(&timep);
     if (tag) {
         __COLOR_PRINT(__sc_colors[prio], "%d:%02d:%02d %d \t %s \t %s\n",
                       tm->tm_hour, tm->tm_min, tm->tm_sec, tv.tv_usec, tag, text);
