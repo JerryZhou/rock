@@ -91,6 +91,7 @@ const char* GetEnv(const char* name) {
     const char* const env = getenv(name);
     return (env != NULL && env[0] != '\0') ? env : NULL;
 #else
+    // safe call on windows: _dupenv_s();
     return getenv(name);
 #endif
 }

@@ -108,6 +108,7 @@ static void runTestRegistry(TinyTestRegistry* registry)
     
     for ( ; s; s = s->m_next ) {
         t = s->m_headTest;
+        t->m_result = 0;
         curOkTests = 0;
         curFailedTests = 0;
         TEST_LOG_INFO("begin suite: %s", s->m_name);
@@ -155,6 +156,7 @@ static bool addTestSuiteCase(TinyTestSuite *suite, TinyTestFunc func, const char
     testDecl->m_func = func;
     testDecl->m_name = name;
     testDecl->m_next = suite->m_headTest;
+    testDecl->m_result = 0;
     suite->m_headTest = testDecl;
     return true;
 }
