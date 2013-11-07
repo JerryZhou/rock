@@ -73,6 +73,11 @@
 # define GTEST_OS_QNX 1
 #endif  // __CYGWIN__
 
+
+#if GTEST_OS_WINDOWS
+#include <windows.h>
+#endif
+
 namespace posix{
 const char* GetEnv(const char* name) {
 #if GTEST_OS_WINDOWS_MOBILE
