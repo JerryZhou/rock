@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <string.h>
-#include <unistd.h>
 
 // port from GTest JerryZhou@outlook.com
 // This header defines the following utilities:
@@ -76,6 +75,8 @@
 
 #if GTEST_OS_WINDOWS
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 namespace posix{
